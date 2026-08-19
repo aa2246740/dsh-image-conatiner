@@ -1,0 +1,8 @@
+node_modules/
+coverage/
+.dshx/
+.DS_Store
+*.tgz
+lib/tsconfig.tsbuildinfo
+lib/types/**/*.js
+lib/types/**/*.js.map

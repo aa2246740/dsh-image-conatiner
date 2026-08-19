@@ -1,0 +1,5 @@
+# Codex-style assistant image gallery. The browser half is discovered from
+# this package's dsh.client declaration.
+- insert:
+    - id: dsh-image-conatiner
+      name: dsh-image-conatiner

@@ -1,0 +1,5 @@
+id: dsh-image-conatiner
+entry: src/index.ts
+marker: "[my-plugins/dsh-image-conatiner] loaded"
+kind: client
+profile: web

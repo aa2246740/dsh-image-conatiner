@@ -1,0 +1,235 @@
+diff --git a/packages/client/ui-conversation/src/client/chat/AssistantMarkdown.tsx b/packages/client/ui-conversation/src/client/chat/AssistantMarkdown.tsx
+index bb766da..639bcf8 100644
+--- a/packages/client/ui-conversation/src/client/chat/AssistantMarkdown.tsx
++++ b/packages/client/ui-conversation/src/client/chat/AssistantMarkdown.tsx
+@@ -9,11 +9,12 @@
+ // their branch action is enabled only when the node is also the completed
+ // turn's transcript tail. Think / tool-head-only nodes stay chrome-free.
+ 
+-import { memo, useMemo } from 'react'
++import { Fragment, memo, useMemo } from 'react'
+ import type { ReactNode } from 'react'
+ import type { AssistantBlock } from '@deepseek-ai/dsh-client-runtime/client'
+ import { JsonBlock, MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives'
+ import type { MarkdownFileMentions } from '@deepseek-ai/dsh-client-ui-primitives'
++import type { PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
+ import { ImageGallery, type ImageLoader } from '@deepseek-ai/dsh-client-ui-attachment'
+ import type { ChatViewSlotProps } from '../contract/slots.ts'
+ import { messageImageLabels } from '../image-labels.ts'
+@@ -27,6 +28,8 @@ export interface AssistantMarkdownProps {
+   interrupted?: boolean | undefined
+   /** Session-authorized durable image loader. */
+   loadImage?: ImageLoader
++  /** Extension chain for replacing a consecutive assistant-image group. */
++  renderSlotChain?: PropsRenderSlots<'conversation.chat.assistant.images'>['renderSlotChain']
+   /** Resolved prose file mentions for this Assistant's closing turn. */
+   mentions?: MarkdownFileMentions | undefined
+   /** The owning view's locale seat, passed down as a plain prop. */
+@@ -35,7 +38,7 @@ export interface AssistantMarkdownProps {
+ 
+ /** Reasoning block as the Think variant summary row (figma 39:28304). */
+ export const AssistantMarkdown = memo(function AssistantMarkdown({
+-  blocks, streaming, interrupted, loadImage, mentions, t,
++  blocks, streaming, interrupted, loadImage, renderSlotChain, mentions, t,
+ }: AssistantMarkdownProps) {
+   const imageLoader = loadImage ?? (() => Promise.reject(new Error(t('image.serviceUnavailable'))))
+   // Stable per locale revision (t identity changes on switch): a fresh object
+@@ -82,7 +85,19 @@ export const AssistantMarkdown = memo(function AssistantMarkdown({
+           group.push(next)
+           i += 1
+         }
+-        rendered.push(<ImageGallery key={start} images={group} load={imageLoader} align="start" labels={messageImageLabels(t)} />)
++        const fallback = (
++          <ImageGallery images={group} load={imageLoader} align="start" labels={messageImageLabels(t)} />
++        )
++        rendered.push(renderSlotChain === undefined
++          ? <Fragment key={start}>{fallback}</Fragment>
++          : (
++              <Fragment key={start}>
++                {renderSlotChain('conversation.chat.assistant.images', {
++                  images: group,
++                  loadImage: imageLoader,
++                }, { fallback })}
++              </Fragment>
++            ))
+         break
+       }
+       // Grouped into tool rows by ChatView; hasVisible above skips an empty shell.
+diff --git a/packages/client/ui-conversation/src/client/chat/AssistantNodeView.tsx b/packages/client/ui-conversation/src/client/chat/AssistantNodeView.tsx
+index 72e8a6a..ba45abc 100644
+--- a/packages/client/ui-conversation/src/client/chat/AssistantNodeView.tsx
++++ b/packages/client/ui-conversation/src/client/chat/AssistantNodeView.tsx
+@@ -1,11 +1,15 @@
+ import { memo, useMemo } from 'react'
++import type { PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
+ import type { ChatNodeViewProps, TurnTailOwnerProps } from '../contract/slots.ts'
+ import { AssistantMarkdown } from './AssistantMarkdown.tsx'
+ 
++type AssistantNodeViewProps = ChatNodeViewProps<'assistant-step'>
++  & Pick<PropsRenderSlots<'conversation.chat.assistant.images'>, 'renderSlotChain'>
++
+ /** Streaming, settled, and interrupted Assistant states share one keyed renderer instance. */
+ export const AssistantNodeView = memo(function AssistantNodeView({
+-  node, useTurnData, openFile, loadImage, fileMentions, t,
+-}: ChatNodeViewProps<'assistant-step'>) {
++  node, useTurnData, openFile, loadImage, fileMentions, renderSlotChain, t,
++}: AssistantNodeViewProps) {
+   const data = node.data
+   const turn = node.location.kind === 'turn' || node.location.kind === 'step'
+     ? node.location.turn
+@@ -26,6 +30,7 @@ export const AssistantNodeView = memo(function AssistantNodeView({
+       streaming={data.status === 'running'}
+       interrupted={data.status === 'interrupted'}
+       loadImage={loadImage}
++      renderSlotChain={renderSlotChain}
+       mentions={mentions}
+       t={t}
+     />
+diff --git a/packages/client/ui-conversation/src/client/chat/register-node-renderers.ts b/packages/client/ui-conversation/src/client/chat/register-node-renderers.ts
+index ed311e4..70360ef 100644
+--- a/packages/client/ui-conversation/src/client/chat/register-node-renderers.ts
++++ b/packages/client/ui-conversation/src/client/chat/register-node-renderers.ts
+@@ -19,8 +19,12 @@ export function registerChatNodeRenderers(ctx: Context): void {
+     { name: 'conversation.chat.node', key: 'steering', locale: NS }, UserMessageNodeView))
+   ctx.slots.inject('conversation.chat.node', () => ctx.slots.register(
+     { name: 'conversation.chat.node', key: 'context', locale: NS }, ContextMessageNodeView))
+-  ctx.slots.inject('conversation.chat.node', () => ctx.slots.register(
+-    { name: 'conversation.chat.node', key: 'assistant-step', locale: NS }, AssistantNodeView))
++  ctx.slots.inject('conversation.chat.node', () => ctx.slots.register({
++    name: 'conversation.chat.node',
++    key: 'assistant-step',
++    locale: NS,
++    children: { 'conversation.chat.assistant.images': { kind: 'chain', scope: 'session' } },
++  }, AssistantNodeView))
+   ctx.slots.inject('conversation.chat.node', () => ctx.slots.register({
+     name: 'conversation.chat.node',
+     key: 'command',
+diff --git a/packages/client/ui-conversation/src/client/contract/slots.ts b/packages/client/ui-conversation/src/client/contract/slots.ts
+index 2125914..9d56c19 100644
+--- a/packages/client/ui-conversation/src/client/contract/slots.ts
++++ b/packages/client/ui-conversation/src/client/contract/slots.ts
+@@ -111,6 +111,16 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
+       scope: 'session'
+       owner: AssistantActionOwnerProps
+     }
++    /**
++     * Consecutive assistant-image blocks at their transcript position. A
++     * chain entry may replace the built-in gallery for a whole ordered group;
++     * all entries declining preserves the native ImageGallery fallback.
++     */
++    'conversation.chat.assistant.images': {
++      kind: 'chain'
++      scope: 'session'
++      owner: AssistantImageGroupOwnerProps
++    }
+     /**
+      * The body of the details panel for the tool call the user selected —
+      * one occupant, so taking it means rendering every tool's output, not just
+@@ -340,6 +350,14 @@ export interface AssistantActionOwnerProps {
+   messageId: MessageId
+ }
+ 
++/** Owner currency for one consecutive assistant-image group. */
++export interface AssistantImageGroupOwnerProps {
++  /** Ordered image blocks exactly where they appeared in the transcript. */
++  images: readonly { attachment: ImageAttachmentRef }[]
++  /** Session-authorized loader for durable image attachments. */
++  loadImage: (attachment: ImageAttachmentRef) => Promise<string>
++}
++
+ /** Hook constrained to business data published on the current Chat Node's Turn. */
+ export type UseChatNodeTurnData = <Key extends Extract<keyof ConversationTurnDataMap, string>>(
+   key: Key,
+diff --git a/packages/client/ui-conversation/src/client/index.ts b/packages/client/ui-conversation/src/client/index.ts
+index 0574aa8..2ddd74a 100644
+--- a/packages/client/ui-conversation/src/client/index.ts
++++ b/packages/client/ui-conversation/src/client/index.ts
+@@ -28,7 +28,7 @@ export type {
+   RetryChatData, ToolChatData, TurnTailChatData,
+ } from './contract/chat-nodes.ts'
+ export type {
+-  ChatFileMentions, ChatNodeOwnerProps, ChatNodeViewProps,
++  AssistantImageGroupOwnerProps, ChatFileMentions, ChatNodeOwnerProps, ChatNodeViewProps,
+   ChatStore, ChatViewInjected, ChatViewSlotProps, CommandRowOwnerProps, CommandRowProps, ComposerBarInjected,
+   ComposerAttachment, ComposerChainProps, ConversationInjected,
+   ConversationSessionHeaderInjected, ConversationSessionInjected, ConversationSlotProps, ConvViewOwnerProps,
+diff --git a/packages/client/ui-conversation/tests/chat-view.client.spec.tsx b/packages/client/ui-conversation/tests/chat-view.client.spec.tsx
+index 360b589..2e75c40 100644
+--- a/packages/client/ui-conversation/tests/chat-view.client.spec.tsx
++++ b/packages/client/ui-conversation/tests/chat-view.client.spec.tsx
+@@ -180,6 +180,8 @@ function makeHarness(init?: Partial<ConversationSnapshot>) {
+     React.ComponentProps<typeof TurnTailNodeView>['renderSlotChain']
+   const renderTurnTailSlot = (() => null) as unknown as
+     React.ComponentProps<typeof TurnTailNodeView>['renderSlot']
++  const renderAssistantImages = ((_key: string, _owner: object, opts?: { fallback?: React.ReactNode }) =>
++    opts?.fallback ?? null) as unknown as React.ComponentProps<typeof AssistantNodeView>['renderSlotChain']
+   const renderSlot = ((key: string, owner: object, opts?: {
+     fallback?: React.ReactNode
+     hookContext?: unknown
+@@ -203,7 +205,7 @@ function makeHarness(init?: Partial<ConversationSnapshot>) {
+       case 'context':
+         return <ContextMessageNodeView {...nodeProps<'context'>()} />
+       case 'assistant-step':
+-        return <AssistantNodeView {...nodeProps<'assistant-step'>()} />
++        return <AssistantNodeView {...nodeProps<'assistant-step'>()} renderSlotChain={renderAssistantImages} />
+       case 'command':
+         return (
+           <CommandNodeView
+diff --git a/packages/client/ui-conversation/tests/image-labels.client.spec.tsx b/packages/client/ui-conversation/tests/image-labels.client.spec.tsx
+index bec1fa8..fcd0043 100644
+--- a/packages/client/ui-conversation/tests/image-labels.client.spec.tsx
++++ b/packages/client/ui-conversation/tests/image-labels.client.spec.tsx
+@@ -3,7 +3,8 @@
+ // flow through image-labels into the gallery, and assistant images keep their
+ // block position between text blocks.
+ 
+-import { afterEach, describe, expect, it } from 'vitest'
++import type { ComponentProps, ReactNode } from 'react'
++import { afterEach, describe, expect, it, vi } from 'vitest'
+ import { cleanup, fireEvent, render } from '@testing-library/react'
+ import { AttachmentId } from '@deepseek-ai/dsh-attachment'
+ import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
+@@ -61,6 +62,43 @@ describe('attachment rejection copy', () => {
+ })
+ 
+ describe('assistant images through the label bridge', () => {
++  it('offers each consecutive group to the image chain with the native gallery as fallback', async () => {
++    const loadImage = vi.fn(() => Promise.resolve('blob:chain'))
++    const renderSlotChain = vi.fn((_key: string, _owner: object, opts?: { fallback?: ReactNode }) => (
++      <div data-testid="assistant-image-slot">{opts?.fallback}</div>
++    )) as unknown as NonNullable<ComponentProps<typeof AssistantMarkdown>['renderSlotChain']>
++    const view = render(
++      <AssistantMarkdown
++        t={t}
++        blocks={[
++          { kind: 'text', text: 'before' },
++          { kind: 'image', attachment },
++          { kind: 'image', attachment },
++          { kind: 'text', text: 'after' },
++        ]}
++        streaming={false}
++        loadImage={loadImage}
++        renderSlotChain={renderSlotChain}
++      />,
++    )
++    await view.findAllByAltText('history.png')
++    expect(renderSlotChain).toHaveBeenCalledTimes(1)
++    const [key, owner, opts] = renderSlotChain.mock.calls[0] as unknown as [
++      string,
++      { images: readonly unknown[]; loadImage: typeof loadImage },
++      { fallback?: ReactNode },
++    ]
++    expect(key).toBe('conversation.chat.assistant.images')
++    expect(owner.images).toHaveLength(2)
++    expect(owner.loadImage).toBe(loadImage)
++    expect(opts.fallback).toBeTruthy()
++    const before = view.getByText('before')
++    const slot = view.getByTestId('assistant-image-slot')
++    const after = view.getByText('after')
++    expect(before.compareDocumentPosition(slot) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
++    expect(slot.compareDocumentPosition(after) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
++  })
++
+   it('resolves zh dictionary strings and opens the lightbox on a single click', async () => {
+     const view = render(
+       <AssistantMarkdown

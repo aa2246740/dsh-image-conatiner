@@ -1,0 +1,5 @@
+# Portable package composition. dshx verify generates a machine-local source
+# overlay; dshx ship installs this package and activates cordis.patch.yml.
+- insert:
+    - id: dsh-image-conatiner
+      name: dsh-image-conatiner
