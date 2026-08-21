@@ -1,34 +1,34 @@
+[English](README.en.md)
+
 # dsh-image-conatiner
 
-A DeepSeek Harness client plugin that replaces compact assistant-image tiles with a responsive, Codex-style generated-image gallery.
+助手刚画出来的图，别再挤成一排小方块。装上这个插件，对话里会变成 Codex 那种大图廊：一张按比例铺开，两三张并排，点开还能全屏翻。
 
-The package name intentionally preserves the requested `conatiner` spelling.
+![点开灯箱，再翻下一张](docs/screenshots/lightbox-next.gif)
 
-> This is an unofficial community plugin. It is not affiliated with or endorsed by DeepSeek.
+> 非官方社区插件，跟 DeepSeek 没关系。包名里的 `conatiner` 是故意留的。
 
-## Experience
+## 长什么样
 
-- one image keeps a useful natural aspect ratio;
-- two to four images use a large two-column composition;
-- larger groups adapt between three and two columns;
-- full-screen group preview includes previous/next controls, a counter, keyboard navigation, original-file download, focus restoration, and retry;
-- the gallery uses Harness semantic tokens, dark mode, narrow viewports, and reduced-motion preferences.
+下面是把插件装进 DeepSeek Harness Web 之后拍的，侧栏和输入框都在。
 
-The plugin claims `conversation.chat.assistant.images`. If it is absent or its selector declines, `ui-conversation` keeps the built-in `ImageGallery` fallback, so transcript rendering remains available.
+一张，按原图比例：
 
-## Compatibility
+![单图按自然比例](docs/screenshots/single-natural-ratio.png)
 
-Version 0.1.0 is tested against DeepSeek Harness `v0.1.0-rc.7` at commit `99f6f02`. It requires the `conversation.chat.assistant.images` chain slot. The slot is not present in the stock rc.7 source, so this repository includes a minimal, MIT-compatible integration patch:
+四张一组：
 
-```text
-patches/deepseek-harness-v0.1.0-rc.7-assistant-images.patch
-```
+![四图网格](docs/screenshots/grid-four.png)
 
-Do not apply the patch if your Harness checkout already contains `conversation.chat.assistant.images`.
+点开以后有上一张、下一张和计数：
 
-## Install
+![灯箱 2 / 4](docs/screenshots/lightbox.png)
 
-Run these commands from outside a live Harness conversation:
+![翻到下一张 3 / 4](docs/screenshots/lightbox-next.png)
+
+## 安装
+
+在正在跑的 Harness 会话外面执行：
 
 ```bash
 cd /absolute/path/to/deepseek-harness
@@ -41,11 +41,20 @@ pnpm run build
 pnpm dshx ship "$(pwd)/my-plugins/dsh-image-conatiner" --restart
 ```
 
-The repository includes the built `lib/` package, so installation does not require rebuilding the plugin itself. `dshx` is the unofficial external plugin workshop from [dsh-external-plugin-devkit](https://github.com/aa2246740/dsh-external-plugin-devkit).
+仓库里已经有编好的 `lib/`，不用先给插件自己再 build 一遍。`dshx` 来自 [dsh-external-plugin-devkit](https://github.com/aa2246740/dsh-external-plugin-devkit)。
 
-## Develop
+0.1.0 对着 DeepSeek Harness `v0.1.0-rc.7`（提交 `99f6f02`）试过。它占 `conversation.chat.assistant.images` 这个口子；原版 rc.7 没有，所以上面那行 `git apply` 会补上。源码里已经有的话会跳过，别再打一遍。没装上或选择器不接的时候，对话还是走自带的 `ImageGallery`，图不会消失。
 
-Clone this repository at `<deepseek-harness>/my-plugins/dsh-image-conatiner`; its TypeScript and bundle configuration intentionally reuse the Harness workspace contracts.
+## 它会做什么
+
+- 单图按自然比例，极端长宽比会收一收
+- 2–4 张用大号双列；再多就在三列和窄屏双列之间切
+- 全屏预览：上一张 / 下一张、计数、键盘、下原图、关掉后焦点回去、失败能重试
+- 跟着 Harness 的语义色，深色、窄屏、减少动态都能用
+
+## 开发
+
+把仓库 clone 到 `<deepseek-harness>/my-plugins/dsh-image-conatiner`。TypeScript 和打包会复用 Harness 工作区合同。
 
 ```bash
 pnpm install --ignore-workspace
@@ -54,8 +63,8 @@ pnpm --ignore-workspace run typecheck
 pnpm --ignore-workspace run build
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and [SECURITY.md](SECURITY.md) for private vulnerability reporting.
+贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。安全问题按 [SECURITY.md](SECURITY.md) 私下说。
 
-## License
+## 许可证
 
-MIT. The optional Harness integration patch modifies MIT-licensed DeepSeek Harness source and retains the upstream license boundary.
+MIT。可选的 Harness 补丁改的是 MIT 许可的上游源码，上游许可证边界还在。
