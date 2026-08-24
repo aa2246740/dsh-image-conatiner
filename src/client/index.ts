@@ -1,6 +1,6 @@
 /** Browser registration for the Codex-style assistant image gallery. */
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
-import type { AssistantImageGroupOwnerProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import { ImageContainer } from './ImageContainer.tsx'
 import { en, zh, type ImageContainerKey } from './locales.ts'
@@ -16,16 +16,20 @@ const NS = 'image-container'
 export const name = 'dsh-image-conatiner-client'
 export const inject = ['slots', 'locale']
 
-function selectImages(owner: AssistantImageGroupOwnerProps): AssistantImageGroupOwnerProps | null {
-  return owner.images.length === 0 ? null : owner
-}
-
-/** Register dictionaries and claim every non-empty assistant image group. */
+/**
+ * Register dictionaries and claim every non-empty message image group.
+ *
+ * Since harness rc.8 the render site dispatches the native single slot
+ * `conversation.message.images` (the rc.7 patch slot
+ * `conversation.chat.assistant.images` no longer exists), and the built-in
+ * ui-attachment entry already owns priority 0 there — a lower priority
+ * shadows it for every group (the cell's lowest live entry renders).
+ */
 export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-image-conatiner: dictionaries')
-  ctx.slots.inject('conversation.chat.assistant.images', () => ctx.slots.register({
-    name: 'conversation.chat.assistant.images',
-    select: selectImages,
+  ctx.slots.inject('conversation.message.images', () => ctx.slots.register({
+    name: 'conversation.message.images',
+    priority: -10,
     locale: NS,
   }, ImageContainer))
 }

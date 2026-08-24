@@ -34,13 +34,11 @@ function attachment(index: number): ImageAttachmentRef {
 
 function props(
   count: number,
-  loadImage: ImageContainerProps['matched']['loadImage'] = async item => `blob:${String(item.attachmentId)}`,
+  loadImage: ImageContainerProps['loadImage'] = async item => `blob:${String(item.attachmentId)}`,
 ): ImageContainerProps {
   return {
-    matched: {
-      images: Array.from({ length: count }, (_, index) => ({ attachment: attachment(index + 1) })),
-      loadImage,
-    },
+    images: Array.from({ length: count }, (_, index) => ({ attachment: attachment(index + 1) })),
+    loadImage,
     t,
   } as ImageContainerProps
 }
@@ -76,7 +74,7 @@ describe('ImageContainer', () => {
   })
 
   it('lets one failed image retry without replacing the rest of the group', async () => {
-    const loadImage = vi.fn<ImageContainerProps['matched']['loadImage']>()
+    const loadImage = vi.fn<ImageContainerProps['loadImage']>()
       .mockRejectedValueOnce(new Error('temporary'))
       .mockResolvedValue('blob:recovered')
     const view = render(<ImageContainer {...props(1, loadImage)} />)
@@ -91,12 +89,9 @@ describe('ImageContainer', () => {
     const input = props(2)
     const duplicateNames = {
       ...input,
-      matched: {
-        ...input.matched,
-        images: input.matched.images.map(({ attachment: item }) => ({
-          attachment: { ...item, name: 'generated.jpg' },
-        })),
-      },
+      images: input.images.map(({ attachment: item }) => ({
+        attachment: { ...item, name: 'generated.jpg' },
+      })),
     } as ImageContainerProps
     const view = render(<ImageContainer {...duplicateNames} />)
     const openers = await view.findAllByRole('button', { name: '查看图片 generated.jpg' })

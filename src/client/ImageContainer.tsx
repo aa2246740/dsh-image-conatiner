@@ -6,12 +6,11 @@ import {
   IconChevronLeftOutline14, IconChevronRightOutline14, IconCloseOutline16,
   IconDownloadOutline16, IconFullscreenOutline16, IconRefreshOutline16,
 } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { AssistantImageGroupOwnerProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import css from './ImageContainer.module.css'
 
-type ImageContainerProps = PropsRuntime<'conversation.chat.assistant.images'>
-  & { matched: AssistantImageGroupOwnerProps }
+// rc.8 dispatches owner props directly on the single slot — no `matched` share.
+type ImageContainerProps = PropsRuntime<'conversation.message.images'>
   & PropsLocale<'image-container'>
 
 type Translator = ImageContainerProps['t']
@@ -32,7 +31,7 @@ interface ImageAssetProps {
   count: number
   state: AssetState
   attempt: number
-  loadImage: AssistantImageGroupOwnerProps['loadImage']
+  loadImage: ImageContainerProps['loadImage']
   onState: (key: string, state: AssetState) => void
   onOpen: (index: number, opener: HTMLElement) => void
   onRetry: (key: string) => void
@@ -303,12 +302,12 @@ function Lightbox({ items, assets, index, opener, onIndex, onClose, onRetry, t }
 }
 
 /** Codex-style responsive gallery and group-aware original-image preview. */
-export function ImageContainer({ matched, t }: ImageContainerProps): ReactNode {
-  const items = useMemo<GalleryItem[]>(() => matched.images.map(({ attachment }, index) => ({
+export function ImageContainer({ images, loadImage, t }: ImageContainerProps): ReactNode {
+  const items = useMemo<GalleryItem[]>(() => images.map(({ attachment }, index) => ({
     key: itemKey(attachment, index),
     attachment,
     index,
-  })), [matched.images])
+  })), [images])
   const [assets, setAssets] = useState<Record<string, AssetState | undefined>>({})
   const [attempts, setAttempts] = useState<Record<string, number | undefined>>({})
   const [openIndex, setOpenIndex] = useState<number | null>(null)
@@ -350,7 +349,7 @@ export function ImageContainer({ matched, t }: ImageContainerProps): ReactNode {
               count={items.length}
               state={assets[item.key] ?? LOADING}
               attempt={attempts[item.key] ?? 0}
-              loadImage={matched.loadImage}
+              loadImage={loadImage}
               onState={updateAsset}
               onOpen={open}
               onRetry={retry}

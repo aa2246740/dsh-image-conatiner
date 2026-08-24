@@ -34,16 +34,20 @@
 cd /absolute/path/to/deepseek-harness
 git clone https://github.com/aa2246740/dsh-image-conatiner.git my-plugins/dsh-image-conatiner
 
-rg -q "conversation.chat.assistant.images" packages/client/ui-conversation/src \
-  || git apply my-plugins/dsh-image-conatiner/patches/deepseek-harness-v0.1.0-rc.7-assistant-images.patch
+# 仅 rc.7 需要；rc.8 请跳过：
+# rg -q "conversation.chat.assistant.images" packages/client/ui-conversation/src \
+#   || git apply my-plugins/dsh-image-conatiner/patches/deepseek-harness-v0.1.0-rc.7-assistant-images.patch
 
-pnpm run build
 pnpm dshx ship "$(pwd)/my-plugins/dsh-image-conatiner" --restart
 ```
 
 仓库里已经有编好的 `lib/`，不用先给插件自己再 build 一遍。`dshx` 来自 [dsh-external-plugin-devkit](https://github.com/aa2246740/dsh-external-plugin-devkit)。
 
-0.1.0 对着 DeepSeek Harness `v0.1.0-rc.7`（提交 `99f6f02`）试过。它占 `conversation.chat.assistant.images` 这个口子；原版 rc.7 没有，所以上面那行 `git apply` 会补上。源码里已经有的话会跳过，别再打一遍。没装上或选择器不接的时候，对话还是走自带的 `ImageGallery`，图不会消失。
+**0.2.0** 对着 DeepSeek Harness `v0.1.0-rc.8`（提交 `141eb6fe`）试过。它占 rc.8 已经有的原生槽位 `conversation.message.images`，并用优先级 `-10` 盖住内置画廊——**不要在 rc.8 上再打 rc.7 那份源码补丁**。
+
+还在 rc.7 上的话，先 checkout 标签 `v0.1.0` 再 ship。0.1.0 占的是补丁加上的 `conversation.chat.assistant.images`。没装上的时候，对话还是走自带的画廊，图不会消失。
+
+如果旧安装是通过 `file:` 写进 profile 依赖的，请改成指向本目录的 `link:` 并重启 Web 宿主，浏览器才会拿到新的 client bundle。
 
 ## 它会做什么
 
@@ -54,7 +58,7 @@ pnpm dshx ship "$(pwd)/my-plugins/dsh-image-conatiner" --restart
 
 ## 开发
 
-把仓库 clone 到 `<deepseek-harness>/my-plugins/dsh-image-conatiner`。TypeScript 和打包会复用 Harness 工作区合同。
+把仓库 clone 到 `<deepseek-harness>/my-plugins/dsh-image-conatiner`。重新构建走 dshx 的 `externalClientBundle` 适配器（`tools/dshx/src/client-build.js`），不要用官方仓库内的 `clientBundle()`（那个 helper 只发现 `packages/*/*`）。
 
 ```bash
 pnpm install --ignore-workspace
@@ -67,4 +71,4 @@ pnpm --ignore-workspace run build
 
 ## 许可证
 
-MIT。可选的 Harness 补丁改的是 MIT 许可的上游源码，上游许可证边界还在。
+MIT。可选的 Harness 补丁（仅 rc.7）改的是 MIT 许可的上游源码，上游许可证边界还在。
