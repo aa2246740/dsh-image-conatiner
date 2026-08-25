@@ -28,24 +28,36 @@ Open one and you get previous / next plus a counter:
 
 ## Install
 
-Run this outside a live Harness conversation:
+You do **not** need dshx. The default path is official `dsh`. The repo already ships built `lib/`.
 
-```bash
-cd /absolute/path/to/deepseek-harness
-git clone https://github.com/aa2246740/dsh-image-conatiner.git my-plugins/dsh-image-conatiner
-
-# rc.7 only — skip this on rc.8:
-# rg -q "conversation.chat.assistant.images" packages/client/ui-conversation/src \
-#   || git apply my-plugins/dsh-image-conatiner/patches/deepseek-harness-v0.1.0-rc.7-assistant-images.patch
-
-pnpm dshx ship "$(pwd)/my-plugins/dsh-image-conatiner" --restart
+```sh
+dsh plugin --profile web add github:aa2246740/dsh-image-conatiner
 ```
 
-The repo already ships built `lib/`, so you don't need to build the plugin itself. `dshx` comes from [dsh-external-plugin-devkit](https://github.com/aa2246740/dsh-external-plugin-devkit).
+Or from a clone:
+
+```sh
+git clone https://github.com/aa2246740/dsh-image-conatiner.git
+dsh plugin --profile web add ./dsh-image-conatiner
+```
+
+Then **restart that DSH Host** and **reload the page**. `dsh plugin add` writes the profile; it does not hot-load a running Host.
+
+Remove:
+
+```sh
+dsh plugin --profile web remove dsh-image-conatiner
+```
 
 **0.2.0** is tested against DeepSeek Harness `v0.1.0-rc.8` at commit `141eb6fe`. It claims the native `conversation.message.images` slot that rc.8 already declares and shadows the built-in gallery at priority `-10`. **Do not apply the rc.7 source patch on rc.8.**
 
-On rc.7, check out tag `v0.1.0` before shipping. That release occupies the patched `conversation.chat.assistant.images` chain slot. If the plugin isn't installed, `ui-conversation` keeps the built-in gallery — images don't disappear.
+On rc.7, check out tag `v0.1.0`. That release occupies the patched `conversation.chat.assistant.images` chain slot:
+
+```text
+patches/deepseek-harness-v0.1.0-rc.7-assistant-images.patch
+```
+
+If the plugin isn't installed, `ui-conversation` keeps the built-in gallery — images don't disappear.
 
 If you already installed an older checkout as a `file:` profile dependency, retarget it to this directory with `link:` and restart the Web host so the browser receives the new client bundle.
 
@@ -68,6 +80,10 @@ pnpm --ignore-workspace run build
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and [SECURITY.md](SECURITY.md) for private vulnerability reporting.
+
+## Optional: dshx
+
+Already using an Agent against a Harness checkout? Install [dshx](https://github.com/aa2246740/dsh-external-plugin-devkit), then give the Agent both that repo and this one (`https://github.com/aa2246740/dsh-image-conatiner`). It can take it from there.
 
 ## License
 
