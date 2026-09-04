@@ -1,20 +1,28 @@
 {
-  "extends": "../../tsconfig.base.client.json",
   "compilerOptions": {
+    "target": "es2024",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "rootDir": "src",
-    "outDir": "lib/types"
+    "outDir": "lib/types",
+    "jsx": "react-jsx",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "types": [],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
-  "include": [
-    "src"
-  ],
-  "references": [
-    { "path": "../../vendor/cordis" },
-    { "path": "../../packages/attachment/attachment" },
-    { "path": "../../packages/client/locale" },
-    { "path": "../../packages/client/runtime" },
-    { "path": "../../packages/client/ui-conversation" },
-    { "path": "../../packages/client/ui-primitives" },
-    { "path": "../../packages/client/ui-slots" },
-    { "path": "../../packages/runtime-diagnostics/invariants" }
-  ]
+  "include": ["src"]
 }

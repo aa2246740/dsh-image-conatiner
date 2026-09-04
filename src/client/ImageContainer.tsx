@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
+import type { MessageImageSource } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import {
   IconChevronLeftOutline14, IconChevronRightOutline14, IconCloseOutline16,
   IconDownloadOutline16, IconFullscreenOutline16, IconRefreshOutline16,
@@ -9,7 +10,7 @@ import {
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import css from './ImageContainer.module.css'
 
-// rc.8 dispatches owner props directly on the single slot — no `matched` share.
+// The native single slot dispatches owner props directly — no `matched` share.
 type ImageContainerProps = PropsRuntime<'conversation.message.images'>
   & PropsLocale<'image-container'>
 
@@ -20,11 +21,15 @@ type AssetState =
   | { status: 'loaded'; src: string }
   | { status: 'error' }
 
-interface GalleryItem {
+interface GalleryItemBase {
   key: string
-  attachment: ImageAttachmentRef
   index: number
 }
+
+type GalleryItem = GalleryItemBase & (
+  | { kind: 'attachment'; attachment: ImageAttachmentRef }
+  | { kind: 'preview'; preview: Extract<MessageImageSource, { preview: object }>['preview'] }
+)
 
 interface ImageAssetProps {
   item: GalleryItem
@@ -40,12 +45,17 @@ interface ImageAssetProps {
 
 const LOADING: AssetState = { status: 'loading' }
 
-function itemKey(attachment: ImageAttachmentRef, index: number): string {
-  return `${String(attachment.attachmentId)}:${String(index)}`
+function itemKey(image: MessageImageSource, index: number): string {
+  const source = 'attachment' in image ? image.attachment.attachmentId : image.preview.url
+  return `${String(source)}:${String(index)}`
 }
 
 function itemName(item: GalleryItem, t: Translator): string {
-  return item.attachment.name ?? t('image.name', { index: item.index + 1 })
+  return sourceName(item) ?? t('image.name', { index: item.index + 1 })
+}
+
+function sourceName(item: GalleryItem): string | undefined {
+  return item.kind === 'attachment' ? item.attachment.name : item.preview.name
 }
 
 function fileExtension(mediaType: ImageAttachmentRef['mediaType']): string {
@@ -58,9 +68,10 @@ function fileExtension(mediaType: ImageAttachmentRef['mediaType']): string {
 }
 
 function downloadName(item: GalleryItem, items: readonly GalleryItem[]): string {
-  const name = item.attachment.name
-  if (name === undefined) return `image-${String(item.index + 1)}.${fileExtension(item.attachment.mediaType)}`
-  if (items.filter(candidate => candidate.attachment.name === name).length === 1) return name
+  const name = sourceName(item)
+  const extension = item.kind === 'attachment' ? fileExtension(item.attachment.mediaType) : 'png'
+  if (name === undefined) return `image-${String(item.index + 1)}.${extension}`
+  if (items.filter(candidate => sourceName(candidate) === name).length === 1) return name
   const dot = name.lastIndexOf('.')
   const suffix = `-${String(item.index + 1)}`
   return dot > 0 ? `${name.slice(0, dot)}${suffix}${name.slice(dot)}` : `${name}${suffix}`
@@ -71,11 +82,18 @@ function sameState(left: AssetState | undefined, right: AssetState): boolean {
   return left.status !== 'loaded' || (right.status === 'loaded' && left.src === right.src)
 }
 
+function assetState(item: GalleryItem, assets: Readonly<Record<string, AssetState | undefined>>): AssetState {
+  return item.kind === 'preview' ? { status: 'loaded', src: item.preview.url } : (assets[item.key] ?? LOADING)
+}
+
 type RatioStyle = CSSProperties & { '--dic-ratio': string }
 
 function singleStyle(item: GalleryItem, count: number): RatioStyle | undefined {
   if (count !== 1) return undefined
-  const natural = item.attachment.width / item.attachment.height
+  const dimensions = item.kind === 'attachment' ? item.attachment : item.preview
+  const natural = dimensions.width !== undefined && dimensions.height !== undefined
+    ? dimensions.width / dimensions.height
+    : 1
   const ratio = Math.min(1.8, Math.max(0.72, natural))
   return { '--dic-ratio': String(ratio) }
 }
@@ -84,6 +102,7 @@ function ImageAsset({
   item, count, state, attempt, loadImage, onState, onOpen, onRetry, t,
 }: ImageAssetProps): ReactNode {
   useEffect(() => {
+    if (item.kind === 'preview') return
     let live = true
     onState(item.key, LOADING)
     void loadImage(item.attachment).then((src) => {
@@ -145,7 +164,7 @@ function Lightbox({ items, assets, index, opener, onIndex, onClose, onRetry, t }
   const titleId = useId()
   const count = items.length
   const item = items[index] as GalleryItem
-  const state = assets[item.key] ?? LOADING
+  const state = assetState(item, assets)
   const name = itemName(item, t)
 
   const move = useCallback((delta: number): void => {
@@ -278,7 +297,7 @@ function Lightbox({ items, assets, index, opener, onIndex, onClose, onRetry, t }
       {count > 1 && (
         <div className={css.filmstrip} aria-label={t('gallery.label')}>
           {items.map((candidate) => {
-            const candidateState = assets[candidate.key] ?? LOADING
+            const candidateState = assetState(candidate, assets)
             return (
               <button
                 type="button"
@@ -303,11 +322,9 @@ function Lightbox({ items, assets, index, opener, onIndex, onClose, onRetry, t }
 
 /** Codex-style responsive gallery and group-aware original-image preview. */
 export function ImageContainer({ images, loadImage, t }: ImageContainerProps): ReactNode {
-  const items = useMemo<GalleryItem[]>(() => images.map(({ attachment }, index) => ({
-    key: itemKey(attachment, index),
-    attachment,
-    index,
-  })), [images])
+  const items = useMemo<GalleryItem[]>(() => images.map((image, index) => 'attachment' in image
+    ? { key: itemKey(image, index), kind: 'attachment', attachment: image.attachment, index }
+    : { key: itemKey(image, index), kind: 'preview', preview: image.preview, index }), [images])
   const [assets, setAssets] = useState<Record<string, AssetState | undefined>>({})
   const [attempts, setAttempts] = useState<Record<string, number | undefined>>({})
   const [openIndex, setOpenIndex] = useState<number | null>(null)
@@ -342,21 +359,24 @@ export function ImageContainer({ images, loadImage, t }: ImageContainerProps): R
         role="group"
         aria-label={t('gallery.label')}
       >
-        {items.map(item => (
-          <div className={css.asset} key={item.key}>
-            <ImageAsset
-              item={item}
-              count={items.length}
-              state={assets[item.key] ?? LOADING}
-              attempt={attempts[item.key] ?? 0}
-              loadImage={loadImage}
-              onState={updateAsset}
-              onOpen={open}
-              onRetry={retry}
-              t={t}
-            />
-          </div>
-        ))}
+        {items.map(item => {
+          const state = assetState(item, assets)
+          return (
+            <div className={css.asset} key={item.key}>
+              <ImageAsset
+                item={item}
+                count={items.length}
+                state={state}
+                attempt={attempts[item.key] ?? 0}
+                loadImage={loadImage}
+                onState={updateAsset}
+                onOpen={open}
+                onRetry={retry}
+                t={t}
+              />
+            </div>
+          )
+        })}
       </div>
       {openIndex !== null && (
         <Lightbox

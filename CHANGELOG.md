@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## Unreleased
+
+- Target DeepSeek Harness `dsh-v0.1.2-rc.1` through its public Chat slot, locale, and renderer client APIs.
+- Remove the deleted client-runtime dependency and make the external client build select its Harness platform table through `DSHX_HARNESS`.
+- Render RC1 optimistic image previews directly while continuing to load durable attachment references through the authorized loader.
+- Keep the existing gallery, lightbox, accessibility, retry, and download behavior unchanged.
+
 ## 0.2.0 - 2026-08-24
 
 - Target DeepSeek Harness `v0.1.0-rc.8` and the native `conversation.message.images` single slot.

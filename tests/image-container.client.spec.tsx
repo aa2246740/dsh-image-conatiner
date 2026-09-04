@@ -3,6 +3,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, waitFor, within } from '@testing-library/react'
 import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
+
+vi.mock('@deepseek-ai/dsh-client-ui-primitives', () => {
+  const Icon = ({ size }: { size?: number }) => <svg width={size} height={size} />
+  return {
+    IconChevronLeftOutline14: Icon,
+    IconChevronRightOutline14: Icon,
+    IconCloseOutline16: Icon,
+    IconDownloadOutline16: Icon,
+    IconFullscreenOutline16: Icon,
+    IconRefreshOutline16: Icon,
+  }
+})
+
 import { ImageContainer } from '../src/client/ImageContainer.tsx'
 import { zh, type ImageContainerKey } from '../src/client/locales.ts'
 
@@ -98,5 +111,18 @@ describe('ImageContainer', () => {
     fireEvent.click(openers[1] as HTMLButtonElement)
 
     expect(view.getByRole('link', { name: '下载原图' }).getAttribute('download')).toBe('generated-2.jpg')
+  })
+
+  it('renders an optimistic RC1 preview directly without calling the durable loader', () => {
+    const loadImage = vi.fn<ImageContainerProps['loadImage']>()
+    const view = render(<ImageContainer
+      images={[{ preview: { url: 'blob:optimistic', name: 'upload.png', width: 640, height: 480 } }]}
+      loadImage={loadImage}
+      t={t}
+    />)
+
+    const image = view.getByRole('img', { name: 'upload.png' })
+    expect(image.getAttribute('src')).toBe('blob:optimistic')
+    expect(loadImage).not.toHaveBeenCalled()
   })
 })

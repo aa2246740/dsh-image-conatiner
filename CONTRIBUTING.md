@@ -4,13 +4,13 @@ Thanks for helping improve `dsh-image-conatiner`.
 
 ## Development setup
 
-Clone the repository into `<deepseek-harness>/my-plugins/dsh-image-conatiner`. Rebuilds use the dshx `externalClientBundle` adapter under `tools/dshx`; the official in-repo `clientBundle()` helper only discovers `packages/*/*`.
+Clone the repository anywhere. Rebuilds use the target Harness dshx `externalClientBundle` adapter; set `DSHX_HARNESS` explicitly so an unrelated checkout cannot supply the client platform table.
 
 ```bash
-pnpm install --ignore-workspace
-pnpm --ignore-workspace run test
-pnpm --ignore-workspace run typecheck
-pnpm --ignore-workspace run build
+pnpm install --frozen-lockfile
+pnpm test
+pnpm typecheck
+DSHX_HARNESS=/absolute/path/to/deepseek-harness pnpm build
 ```
 
 Keep changes inside the plugin unless an image-slot contract change is required. If the Harness seam changes, update the compatibility note (and the rc.7 patch only when targeting rc.7). Preserve the public package name, including the intentional `conatiner` spelling.

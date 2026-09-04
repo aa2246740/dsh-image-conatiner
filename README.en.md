@@ -49,7 +49,7 @@ Remove:
 dsh plugin --profile web remove dsh-image-conatiner
 ```
 
-**0.2.0** is tested against DeepSeek Harness `v0.1.0-rc.8` at commit `141eb6fe`. It claims the native `conversation.message.images` slot that rc.8 already declares and shadows the built-in gallery at priority `-10`. **Do not apply the rc.7 source patch on rc.8.**
+The current source targets DeepSeek Harness `dsh-v0.1.2-rc.1`. It uses the public native `conversation.message.images` slot and shadows the built-in gallery at priority `-10`. `v0.2.0` remains the published `v0.1.0-rc.8` release; neither version needs the rc.7 source patch.
 
 On rc.7, check out tag `v0.1.0`. That release occupies the patched `conversation.chat.assistant.images` chain slot:
 
@@ -70,13 +70,13 @@ If you already installed an older checkout as a `file:` profile dependency, reta
 
 ## Develop
 
-Clone this repo at `<deepseek-harness>/my-plugins/dsh-image-conatiner`. Rebuilds use the dshx `externalClientBundle` adapter (`tools/dshx/src/client-build.js`), not the official in-repo `clientBundle()` preset (that helper only discovers `packages/*/*`).
+The repository can live outside Harness. Rebuilds use the target Harness dshx `externalClientBundle` adapter; set `DSHX_HARNESS` explicitly so the build reads the intended client platform table.
 
 ```bash
-pnpm install --ignore-workspace
-pnpm --ignore-workspace run test
-pnpm --ignore-workspace run typecheck
-pnpm --ignore-workspace run build
+pnpm install --frozen-lockfile
+pnpm test
+pnpm typecheck
+DSHX_HARNESS=/absolute/path/to/deepseek-harness pnpm build
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and [SECURITY.md](SECURITY.md) for private vulnerability reporting.

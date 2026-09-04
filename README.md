@@ -49,7 +49,7 @@ dsh plugin --profile web add ./dsh-image-conatiner
 dsh plugin --profile web remove dsh-image-conatiner
 ```
 
-**0.2.0** 对着 DeepSeek Harness `v0.1.0-rc.8`（提交 `141eb6fe`）试过。它占 rc.8 已经有的原生槽位 `conversation.message.images`，并用优先级 `-10` 盖住内置画廊——**不要在 rc.8 上再打 rc.7 那份源码补丁**。
+当前源码面向 DeepSeek Harness `dsh-v0.1.2-rc.1`。它使用公开的 `conversation.message.images` 原生槽位，并用优先级 `-10` 盖住内置画廊。`v0.2.0` 仍是面向 `v0.1.0-rc.8` 的已发布版本；两个版本都不需要 rc.7 源码补丁。
 
 还在 rc.7 上的话，先 checkout 标签 `v0.1.0`。0.1.0 占的是补丁加上的 `conversation.chat.assistant.images`：
 
@@ -70,13 +70,13 @@ patches/deepseek-harness-v0.1.0-rc.7-assistant-images.patch
 
 ## 开发
 
-把仓库 clone 到 `<deepseek-harness>/my-plugins/dsh-image-conatiner`。重新构建走 dshx 的 `externalClientBundle` 适配器（`tools/dshx/src/client-build.js`），不要用官方仓库内的 `clientBundle()`（那个 helper 只发现 `packages/*/*`）。
+仓库可以独立放置。重新构建走目标 Harness 中 dshx 的 `externalClientBundle` 适配器；用 `DSHX_HARNESS` 明确指定目标检出，避免读取另一份 Harness 的客户端平台表。
 
 ```bash
-pnpm install --ignore-workspace
-pnpm --ignore-workspace run test
-pnpm --ignore-workspace run typecheck
-pnpm --ignore-workspace run build
+pnpm install --frozen-lockfile
+pnpm test
+pnpm typecheck
+DSHX_HARNESS=/absolute/path/to/deepseek-harness pnpm build
 ```
 
 贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。安全问题按 [SECURITY.md](SECURITY.md) 私下说。
