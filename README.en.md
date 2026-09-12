@@ -2,6 +2,12 @@
 
 # dsh-image-conatiner
 
+```sh
+dsh plugin --profile web add github:aa2246740/dsh-image-conatiner
+```
+
+You need official `dsh` on PATH (or `npx @deepseek-ai/dsh`) and **pnpm**. Then restart that Host and reload the page. `dsh plugin add` writes the profile. It does not hot-load a running Host.
+
 Generated images in the chat use a larger gallery: one image at its natural ratio, a few side by side, fullscreen paging on click. The `conatiner` spelling in the package name is intentional.
 
 ![Open the lightbox, then next](docs/screenshots/lightbox-next.gif)
@@ -16,10 +22,12 @@ Generated images in the chat use a larger gallery: one image at its natural rati
 
 ## Install
 
-The repo already ships built `lib/`.
+That `github:` command works because this package declares `dsh.bundle.patch` and commits built `lib/`. Official `dsh plugin add` runs pnpm in `$DSH_HOME/profiles/web` and appends this package to `dsh.profile.bundles`. You do not need Creator Mode or a second toolchain.
+
+If `dsh` is not on PATH:
 
 ```sh
-dsh plugin --profile web add github:aa2246740/dsh-image-conatiner
+npx @deepseek-ai/dsh plugin --profile web add github:aa2246740/dsh-image-conatiner
 ```
 
 Or from a clone:
@@ -29,13 +37,11 @@ git clone https://github.com/aa2246740/dsh-image-conatiner.git
 dsh plugin --profile web add ./dsh-image-conatiner
 ```
 
-Then restart that DSH Host and reload the page. `dsh plugin add` writes the profile. It does not hot-load a running Host.
-
 ```sh
 dsh plugin --profile web remove dsh-image-conatiner
 ```
 
-Current source targets DeepSeek Harness `dsh-v0.1.2-rc.1`. It uses the public `conversation.message.images` slot and shadows the built-in gallery at priority `-10`. `v0.2.0` remains the published `v0.1.0-rc.8` release.
+Targets official DeepSeek Harness **0.1.5-rc.2**. It uses the public `conversation.message.images` slot and shadows the built-in gallery at priority `-10`. `v0.2.0` remains the published `v0.1.0-rc.8` release.
 
 On rc.7, check out tag `v0.1.0`. That version occupies the patched `conversation.chat.assistant.images` slot:
 
@@ -51,10 +57,9 @@ Without the plugin, chat still uses the built-in gallery. If an older install us
 pnpm install --frozen-lockfile
 pnpm test
 pnpm typecheck
-DSHX_HARNESS=/absolute/path/to/deepseek-harness pnpm build
 ```
 
-Set `DSHX_HARNESS` to the target checkout. See [CONTRIBUTING.md](CONTRIBUTING.md). Report security issues privately via [SECURITY.md](SECURITY.md).
+Committed `lib/` is what the official `github:` install loads. Rebuilding the client is in [CONTRIBUTING.md](CONTRIBUTING.md). Report security issues privately via [SECURITY.md](SECURITY.md).
 
 ## License
 
