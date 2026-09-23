@@ -4,8 +4,8 @@ import { createPortal } from 'react-dom'
 import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
 import type { MessageImageSource } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import {
-  IconChevronLeftOutline14, IconChevronRightOutline14, IconCloseOutline16,
-  IconDownloadOutline16, IconFullscreenOutline16, IconRefreshOutline16,
+  IconChevronLeftOutlineRegular, IconChevronRightOutlineRegular, IconCloseOutlineRegular,
+  IconDownloadOutlineRegular, IconFullscreenOutlineRegular, IconRefreshOutlineRegular,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import css from './ImageContainer.module.css'
@@ -27,7 +27,7 @@ interface GalleryItemBase {
 }
 
 type GalleryItem = GalleryItemBase & (
-  | { kind: 'attachment'; attachment: ImageAttachmentRef }
+  | { kind: 'attachment'; attachment: ImageAttachmentRef; label?: string }
   | { kind: 'preview'; preview: Extract<MessageImageSource, { preview: object }>['preview'] }
 )
 
@@ -55,7 +55,7 @@ function itemName(item: GalleryItem, t: Translator): string {
 }
 
 function sourceName(item: GalleryItem): string | undefined {
-  return item.kind === 'attachment' ? item.attachment.name : item.preview.name
+  return item.kind === 'attachment' ? (item.label ?? item.attachment.name) : item.preview.name
 }
 
 function fileExtension(mediaType: ImageAttachmentRef['mediaType']): string {
@@ -122,7 +122,7 @@ function ImageAsset({
         aria-label={t('image.retry', { name })}
         onClick={() => { onRetry(item.key) }}
       >
-        <IconRefreshOutline16 size={18} />
+        <IconRefreshOutlineRegular size={18} />
         <span>{t('image.failed')}</span>
       </button>
     )
@@ -142,7 +142,7 @@ function ImageAsset({
       {state.status === 'loaded'
         ? <img src={state.src} alt={name} />
         : <span className={css.skeleton}><span className={css.srOnly}>{t('image.loading')}</span></span>}
-      <span className={css.expand} aria-hidden="true"><IconFullscreenOutline16 size={16} /></span>
+      <span className={css.expand} aria-hidden="true"><IconFullscreenOutlineRegular size={16} /></span>
     </button>
   )
 }
@@ -241,7 +241,7 @@ function Lightbox({ items, assets, index, opener, onIndex, onClose, onRetry, t }
             aria-label={t('preview.download')}
             title={t('preview.download')}
           >
-            <IconDownloadOutline16 size={17} />
+            <IconDownloadOutlineRegular size={17} />
           </a>
         )}
         <button
@@ -252,7 +252,7 @@ function Lightbox({ items, assets, index, opener, onIndex, onClose, onRetry, t }
           title={t('preview.close')}
           onClick={onClose}
         >
-          <IconCloseOutline16 size={18} />
+          <IconCloseOutlineRegular size={18} />
         </button>
       </div>
 
@@ -266,7 +266,7 @@ function Lightbox({ items, assets, index, opener, onIndex, onClose, onRetry, t }
             title={t('preview.previous')}
             onClick={() => { move(-1) }}
           >
-            <IconChevronLeftOutline14 size={20} />
+            <IconChevronLeftOutlineRegular size={20} />
           </button>
           <button
             type="button"
@@ -276,7 +276,7 @@ function Lightbox({ items, assets, index, opener, onIndex, onClose, onRetry, t }
             title={t('preview.next')}
             onClick={() => { move(1) }}
           >
-            <IconChevronRightOutline14 size={20} />
+            <IconChevronRightOutlineRegular size={20} />
           </button>
         </>
       )}
@@ -288,7 +288,7 @@ function Lightbox({ items, assets, index, opener, onIndex, onClose, onRetry, t }
         )}
         {state.status === 'error' && (
           <button type="button" className={css.previewRetry} onClick={() => { onRetry(item.key) }}>
-            <IconRefreshOutline16 size={18} />
+            <IconRefreshOutlineRegular size={18} />
             {t('image.retry', { name })}
           </button>
         )}
@@ -321,10 +321,20 @@ function Lightbox({ items, assets, index, opener, onIndex, onClose, onRetry, t }
 }
 
 /** Codex-style responsive gallery and group-aware original-image preview. */
-export function ImageContainer({ images, loadImage, t }: ImageContainerProps): ReactNode {
-  const items = useMemo<GalleryItem[]>(() => images.map((image, index) => 'attachment' in image
-    ? { key: itemKey(image, index), kind: 'attachment', attachment: image.attachment, index }
-    : { key: itemKey(image, index), kind: 'preview', preview: image.preview, index }), [images])
+export function ImageContainer({ images, loadImage, thumbnail = false, t }: ImageContainerProps): ReactNode {
+  const items = useMemo<GalleryItem[]>(() => images.map((image, index) => {
+    if (!('attachment' in image)) {
+      return { key: itemKey(image, index), kind: 'preview', preview: image.preview, index }
+    }
+    const label = image.label
+    return {
+      key: itemKey(image, index),
+      kind: 'attachment',
+      attachment: image.attachment,
+      index,
+      ...(label === undefined ? {} : { label }),
+    }
+  }), [images])
   const [assets, setAssets] = useState<Record<string, AssetState | undefined>>({})
   const [attempts, setAttempts] = useState<Record<string, number | undefined>>({})
   const [openIndex, setOpenIndex] = useState<number | null>(null)
@@ -356,6 +366,7 @@ export function ImageContainer({ images, loadImage, t }: ImageContainerProps): R
         className={css.gallery}
         data-count={items.length <= 4 ? String(items.length) : 'many'}
         data-compact={items.length > 4 || undefined}
+        data-thumbnail={thumbnail || undefined}
         role="group"
         aria-label={t('gallery.label')}
       >

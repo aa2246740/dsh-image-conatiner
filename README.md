@@ -41,7 +41,7 @@ dsh plugin --profile web add ./dsh-image-conatiner
 dsh plugin --profile web remove dsh-image-conatiner
 ```
 
-面向官方 DeepSeek Harness **0.1.5-rc.3**（标签 `dsh-v0.1.5-rc.3`，npm `@deepseek-ai/dsh@0.1.5-rc.3`）。它占用公开的 `conversation.message.images` 槽，优先级 `-10`，盖住内置画廊。同名包的 peer 是 `^0.1.5-rc.3`：`^0.1.2-rc.1` 接不住 `0.1.5-rc.3`。不要对着 `0.1.7` alpha 装。`v0.2.0` 仍是面向 `v0.1.0-rc.8` 的已发布版本。
+面向官方 DeepSeek Harness **0.1.7-rc.1**（标签 `dsh-v0.1.7-rc.1`，npm `@deepseek-ai/dsh@0.1.7-rc.1`）。它占用公开的 `conversation.message.images` 槽，优先级 `-10`，盖住内置画廊。同名包的 peer 是 `>=0.1.7-rc.1 <0.1.8`：`^0.1.5-rc.3` 接不住 `0.1.7-rc.1`。不要对着 `0.1.7` alpha 装。`v0.2.1` 仍是面向 `0.1.5-rc.3` 的已发布版本，`v0.2.0` 仍是面向 `v0.1.0-rc.8` 的已发布版本。
 
 还在 rc.7 上的话，先 checkout 标签 `v0.1.0`。0.1.0 占的是补丁加上的 `conversation.chat.assistant.images`：
 

@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.2.2 - 2026-09-23
+
+- Target official DeepSeek Harness `0.1.7-rc.1` (`dsh-v0.1.7-rc.1`, `@deepseek-ai/dsh@0.1.7-rc.1`). Peer ranges are `>=0.1.7-rc.1 <0.1.8` because `^0.1.5-rc.3` does not accept `0.1.7-rc.1`. This line does not target `0.1.7` alphas. `0.2.1` remains the `0.1.5-rc.3` release.
+- Follow the rc.1 primitives icon names (`*Regular` weight, size stays a prop).
+- Use the message-image `label` as the presentation name, and render owner `thumbnail` rows as fixed 48px uncropped tiles. Chat galleries stay the existing large layout.
+
 ## 0.2.1 - 2026-09-23
 
 - Lead the README with the official stock install: `dsh plugin --profile web add github:aa2246740/dsh-image-conatiner`, then restart the Host and reload. Requires pnpm. The package already declares `dsh.bundle.patch` and commits `lib/`.
