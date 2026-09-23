@@ -7,12 +7,12 @@ import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
 vi.mock('@deepseek-ai/dsh-client-ui-primitives', () => {
   const Icon = ({ size }: { size?: number }) => <svg width={size} height={size} />
   return {
-    IconChevronLeftOutline14: Icon,
-    IconChevronRightOutline14: Icon,
-    IconCloseOutline16: Icon,
-    IconDownloadOutline16: Icon,
-    IconFullscreenOutline16: Icon,
-    IconRefreshOutline16: Icon,
+    IconChevronLeftOutlineRegular: Icon,
+    IconChevronRightOutlineRegular: Icon,
+    IconCloseOutlineRegular: Icon,
+    IconDownloadOutlineRegular: Icon,
+    IconFullscreenOutlineRegular: Icon,
+    IconRefreshOutlineRegular: Icon,
   }
 })
 
@@ -124,5 +124,21 @@ describe('ImageContainer', () => {
     const image = view.getByRole('img', { name: 'upload.png' })
     expect(image.getAttribute('src')).toBe('blob:optimistic')
     expect(loadImage).not.toHaveBeenCalled()
+  })
+
+  it('uses the presentation label and a fixed thumbnail for an attachment list row', async () => {
+    const stored = attachment(1)
+    const view = render(<ImageContainer
+      images={[{ attachment: { ...stored, name: 'stored.png' }, label: 'shots/card.png' }]}
+      loadImage={async item => `blob:${String(item.attachmentId)}`}
+      thumbnail
+      t={t}
+    />)
+
+    const gallery = view.getByRole('group', { name: '生成图片' })
+    expect(gallery.getAttribute('data-thumbnail')).toBe('true')
+    const image = await view.findByRole('img', { name: 'shots/card.png' })
+    expect(image.getAttribute('src')).toMatch(/^blob:/)
+    expect(view.queryByRole('img', { name: 'stored.png' })).toBeNull()
   })
 })

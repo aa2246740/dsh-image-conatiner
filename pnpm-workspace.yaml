@@ -1,8 +1,9 @@
 allowBuilds:
   esbuild: true
 
-# Official 0.1.5-rc.3 packages publish the same day as the desk target.
+# Official 0.1.7-rc.1 packages publish the same day as the desk target.
 # A 24h release-age gate would refuse that install. 0.1.7 alphas stay out
-# because devDependencies pin 0.1.5-rc.3 exactly.
+# because devDependencies pin 0.1.7-rc.1 exactly and peers are
+# >=0.1.7-rc.1 <0.1.8.
 minimumReleaseAgeExclude:
   - '@deepseek-ai/*'

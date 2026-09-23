@@ -16,6 +16,8 @@ export declare const inject: string[];
  * `conversation.chat.assistant.images` no longer exists), and the built-in
  * ui-attachment entry already owns priority 0 there — a lower priority
  * shadows it for every group (the cell's lowest live entry renders).
+ * Owner `label` is the presentation name; owner `thumbnail` keeps list rows
+ * at a fixed uncropped tile instead of the chat gallery.
  */
 export declare function apply(ctx: ClientContext): void;
 //# sourceMappingURL=index.d.ts.map
