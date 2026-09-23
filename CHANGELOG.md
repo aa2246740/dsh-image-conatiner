@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 
-## Unreleased
+## 0.2.1 - 2026-09-23
 
 - Lead the README with the official stock install: `dsh plugin --profile web add github:aa2246740/dsh-image-conatiner`, then restart the Host and reload. Requires pnpm. The package already declares `dsh.bundle.patch` and commits `lib/`.
 - Target official DeepSeek Harness `0.1.5-rc.3` (`dsh-v0.1.5-rc.3`, `@deepseek-ai/dsh@0.1.5-rc.3`) through its public Chat slot, locale, and renderer client APIs. Peer ranges are `^0.1.5-rc.3` because `^0.1.2-rc.1` does not accept `0.1.5-rc.3`. This line does not target `0.1.7` alphas.

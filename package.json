@@ -1,7 +1,7 @@
 {
   "name": "dsh-image-conatiner",
   "description": "Codex-style generated-image gallery and lightbox for DeepSeek Harness",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "BiggerdreamStudioDavid",
   "repository": {
     "type": "git",
