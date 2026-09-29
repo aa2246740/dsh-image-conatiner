@@ -41,13 +41,9 @@ dsh plugin --profile web add ./dsh-image-conatiner
 dsh plugin --profile web remove dsh-image-conatiner
 ```
 
-Targets official DeepSeek Harness **0.1.7-rc.1** (tag `dsh-v0.1.7-rc.1`, npm `@deepseek-ai/dsh@0.1.7-rc.1`). It uses the public `conversation.message.images` slot and shadows the built-in gallery at priority `-10`. Peers are `>=0.1.7-rc.1 <0.1.8`: `^0.1.5-rc.3` does not accept `0.1.7-rc.1`. Do not install it against `0.1.7` alphas. `v0.2.1` remains the published `0.1.5-rc.3` release, and `v0.2.0` remains the published `v0.1.0-rc.8` release.
+Targets official DeepSeek Harness **0.2.0-rc.2** (tag `dsh-v0.2.0-rc.2`, npm `@deepseek-ai/dsh@0.2.0-rc.2`). It uses the public `conversation.message.images` slot and shadows the built-in gallery at priority `-10`. Peers are `>=0.2.0-rc.1 <0.2.1`: `^0.1.5-rc.3` does not accept `0.2.0-rc.2`. Do not install it against `0.1.7` alphas. `v0.2.1` remains the published `0.1.5-rc.3` release, and `v0.2.0` remains the published `v0.1.0-rc.8` release.
 
-On rc.7, check out tag `v0.1.0`. That version occupies the patched `conversation.chat.assistant.images` slot:
-
-```text
-patches/deepseek-harness-v0.1.0-rc.7-assistant-images.patch
-```
+This version uses the public image slot and requires no Harness patch.
 
 Without the plugin, chat still uses the built-in gallery. If an older install used a `file:` profile dependency, change it to `link:` pointing at this directory and restart the Web host.
 

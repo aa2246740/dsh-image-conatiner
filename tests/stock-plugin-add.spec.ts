@@ -33,19 +33,19 @@ describe('stock dsh plugin add', () => {
     expect(existsSync(resolve(root, 'lib/client.js'))).toBe(true)
   })
 
-  it('accepts official 0.1.7-rc.1 and refuses 0.1.7 alphas', () => {
+  it('accepts official 0.2.0-rc.2 and refuses 0.2.0 alphas', () => {
     for (const name of HARNESS_PEERS) {
-      expect(pkg.peerDependencies[name]).toBe('>=0.1.7-rc.1 <0.1.8')
-      expect(pkg.devDependencies[name]).toBe('0.1.7-rc.1')
+      expect(pkg.peerDependencies[name]).toBe('>=0.2.0-rc.1 <0.2.1')
+      expect(pkg.devDependencies[name]).toBe('0.2.0-rc.2')
       const range = pkg.peerDependencies[name] ?? ''
-      expect(semver.satisfies('0.1.7-rc.1', range)).toBe(true)
-      expect(semver.satisfies('0.1.7-rc.1', range, { includePrerelease: true })).toBe(true)
-      expect(semver.satisfies('0.1.7-rc.1', '^0.1.5-rc.3')).toBe(false)
+      expect(semver.satisfies('0.2.0-rc.2', range)).toBe(true)
+      expect(semver.satisfies('0.2.0-rc.2', range, { includePrerelease: true })).toBe(true)
+      expect(semver.satisfies('0.2.0-rc.2', '^0.1.5-rc.3')).toBe(false)
       expect(semver.satisfies('0.1.5-rc.3', range)).toBe(false)
-      expect(semver.satisfies('0.1.7-alpha.1', range)).toBe(false)
-      expect(semver.satisfies('0.1.7-alpha.2', range)).toBe(false)
-      expect(semver.satisfies('0.1.7-alpha.1', range, { includePrerelease: true })).toBe(false)
-      expect(semver.satisfies('0.1.7-alpha.2', range, { includePrerelease: true })).toBe(false)
+      expect(semver.satisfies('0.2.0-alpha.1', range)).toBe(false)
+      expect(semver.satisfies('0.2.0-alpha.2', range)).toBe(false)
+      expect(semver.satisfies('0.2.0-alpha.1', range, { includePrerelease: true })).toBe(false)
+      expect(semver.satisfies('0.2.0-alpha.2', range, { includePrerelease: true })).toBe(false)
     }
   })
 })
