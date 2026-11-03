@@ -1,3 +1,10 @@
+> [!WARNING]
+> **DEPRECATED / 已废弃**
+>
+> This plugin is superseded by native image container support in DeepSeek Harness 0.2.1 and later. Use the built-in support.
+>
+> DeepSeek Harness 0.2.1 起内置图像容器支持，本插件已退役，请使用官方内置功能。
+
 [English](README.en.md)
 
 # dsh-image-conatiner
